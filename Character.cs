@@ -35,6 +35,10 @@ namespace Game {
                 return;
             }
             var ushortDmg = Convert.ToUInt16(dmg);
+            if (HP < ushortDmg) {
+                HP = 0;
+                return;
+            }
             HP -= ushortDmg;
         }
 
@@ -58,6 +62,10 @@ namespace Game {
                 return;
             }
             var ushortDmg = Convert.ToUInt16(dmg);
+            if (HP < ushortDmg) {
+                HP = 0;
+                return;
+            }
             HP -= ushortDmg;
         }
 
