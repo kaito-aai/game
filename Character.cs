@@ -53,7 +53,12 @@ namespace Game {
 
         public override void TakeDamage(ushort damage)
         {
-            HP -= damage;
+            var dmg = damage - Defense;
+            if (dmg < 0) {
+                return;
+            }
+            var ushortDmg = Convert.ToUInt16(dmg);
+            HP -= ushortDmg;
         }
 
         public override ushort GiveDamage(Character character)
