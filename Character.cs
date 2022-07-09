@@ -1,9 +1,47 @@
 namespace Game {
+    public enum BadStatus {
+        Poison,
+    }
+
+    public class BadStatusState {
+        public BadStatus badStatus { get; }
+        public int turnUntilCure { get; private set; }
+
+        public BadStatusState(BadStatus badStatus, int turnUntilCure)
+        {
+            this.badStatus = badStatus;
+            this.turnUntilCure = turnUntilCure;
+        }
+
+        public void Cure()
+        {
+            if (this.turnUntilCure == 0)
+            {
+                return;
+            }
+            this.turnUntilCure--;
+        }
+    }
+
+    public class Damage {
+        public ushort DamagePoint { get; }
+        public List<BadStatusState> BadStatusStates { get; private set; } = new List<BadStatusState>();
+
+        public Damage(ushort damagePoint, List<BadStatusState>? badStatusStates) {
+            this.DamagePoint = damagePoint;
+            if (badStatusStates == null) {
+                return;
+            }
+            this.BadStatusStates = badStatusStates;
+        }
+    }
+
     public abstract class Character {
         public string Name { get; set; }
         public ushort HP { get; set; }
         public ushort Attack { get; set; }
         public ushort Defense { get; set; }
+        public List<BadStatusState> BadStatusStates { get; set; } = new List<BadStatusState>();
 
         public Character(string name, ushort hp, ushort attack, ushort defense)
         {
@@ -13,13 +51,25 @@ namespace Game {
             Defense = defense;
         }
 
-        public abstract void TakeDamage(ushort damage);
+        public abstract void TakeDamage(Damage damage);
 
         public abstract ushort GiveDamage(Character character);
+
+        public abstract void ProcessPassiveEffect();
 
         public bool isAlive()
         {
             return HP > 0;
+        }
+
+        public void CureBadStatus() {
+            if (this.BadStatusStates.Count() == 0) {
+                return;
+            }
+
+            this.BadStatusStates.ForEach(badStatus => {
+                badStatus.Cure();
+            });
         }
     }
 
@@ -28,9 +78,9 @@ namespace Game {
         {
         }
 
-        public override void TakeDamage(ushort damage)
+        public override void TakeDamage(Damage damage)
         {
-            var dmg = damage - Defense;
+            var dmg = damage.DamagePoint - Defense;
             if (dmg < 0) {
                 return;
             }
@@ -40,13 +90,34 @@ namespace Game {
                 return;
             }
             HP -= ushortDmg;
+            foreach (var bad in damage.BadStatusStates) {
+                if (this.BadStatusStates.Find(x => x.badStatus == bad.badStatus) != null) {
+                    continue;
+                }
+                BadStatusStates.Add(bad);
+            }
         }
 
         public override ushort GiveDamage(Character character)
         {
             var beforeHp = character.HP;
-            character.TakeDamage(Attack);
+            var damage = new Damage(Attack, new List<BadStatusState>{ new BadStatusState(BadStatus.Poison, 3)});
+            character.TakeDamage(damage);
             return Convert.ToUInt16(beforeHp - character.HP);
+        }
+
+        public override void ProcessPassiveEffect()
+        {
+            foreach (var badStatus in this.BadStatusStates) {
+                if (badStatus.badStatus == BadStatus.Poison) {
+                    var poisonDamage = 10;
+                    if (HP < poisonDamage) {
+                        HP = 0;
+                        return;
+                    }
+                    HP -= 10;
+                }
+            }
         }
     }
 
@@ -55,9 +126,9 @@ namespace Game {
         {
         }
 
-        public override void TakeDamage(ushort damage)
+        public override void TakeDamage(Damage damage)
         {
-            var dmg = damage - Defense;
+            var dmg = damage.DamagePoint - Defense;
             if (dmg < 0) {
                 return;
             }
@@ -67,13 +138,34 @@ namespace Game {
                 return;
             }
             HP -= ushortDmg;
+            foreach (var bad in damage.BadStatusStates) {
+                if (this.BadStatusStates.Find(x => x.badStatus == bad.badStatus) != null) {
+                    continue;
+                }
+                BadStatusStates.Add(bad);
+            }
         }
 
         public override ushort GiveDamage(Character character)
         {
             var beforeHp = character.HP;
-            character.TakeDamage(Attack);
+            var damage = new Damage(Attack, new List<BadStatusState>());
+            character.TakeDamage(damage);
             return Convert.ToUInt16(beforeHp - character.HP);
+        }
+
+        public override void ProcessPassiveEffect()
+        {
+            foreach (var badStatus in this.BadStatusStates) {
+                if (badStatus.badStatus == BadStatus.Poison) {
+                    var poisonDamage = 10;
+                    if (HP < poisonDamage) {
+                        HP = 0;
+                        return;
+                    }
+                    HP -= 10;
+                }
+            }
         }
     }
 }

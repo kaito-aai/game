@@ -11,6 +11,7 @@ var turnCount = 0;
 while (userCharacter.isAlive() && monster.isAlive()) {
     turnCount++;
     Console.WriteLine($"=====================TURN: {turnCount}======================");
+    userCharacter.ProcessPassiveEffect();
     Console.WriteLine();
     Console.Write("Your Turn: Attack[A] / Nothing[N]");
     var turn = Console.ReadKey();
@@ -24,6 +25,10 @@ while (userCharacter.isAlive() && monster.isAlive()) {
         Console.WriteLine("Your Turn: You do nothing");
     }
 
+    if (userCharacter.BadStatusStates.Count() > 0) {
+        userCharacter.CureBadStatus();
+    }
+
     Console.WriteLine();
     Console.WriteLine($"Interval: {userCharacter.Name}: {userCharacter.HP} / {monster.Name}: {monster.HP}");
     if (!monster.isAlive()) {
@@ -32,9 +37,14 @@ while (userCharacter.isAlive() && monster.isAlive()) {
     Console.WriteLine();
 
     Console.WriteLine("Enemy Turn");
+    monster.ProcessPassiveEffect();
 
     var userDamage = monster.GiveDamage(userCharacter);
     Console.WriteLine($"Enemy Turn: {userCharacter.Name} damaged {userDamage}!!");
+
+    if (monster.BadStatusStates.Count() > 0) {
+        monster.CureBadStatus();
+    }
 
     Console.WriteLine($"Interval: {userCharacter.Name}: {userCharacter.HP} / {monster.Name}: {monster.HP}");
     Console.WriteLine();
