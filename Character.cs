@@ -25,10 +25,18 @@ namespace Game {
 
     public class Damage {
         public ushort DamagePoint { get; }
-        public List<BadStatusState> BadStatusStates { get; private set; } = new List<BadStatusState>();
 
-        public Damage(ushort damagePoint, List<BadStatusState>? badStatusStates) {
+        public Damage(ushort damagePoint) {
             this.DamagePoint = damagePoint;
+        }
+    }
+
+    public class DamageSkill : Damage {
+        public string Name { get; }
+        public ushort DamagePoint { get; }
+        public List<BadStatusState> BadStatusStates { get; private set; } = new List<BadStatusState>();
+        public DamageSkill(string name, ushort damagePoint, List<BadStatusState>? badStatusStates) : base(damagePoint) {
+            this.Name = name;
             if (badStatusStates == null) {
                 return;
             }
@@ -41,19 +49,23 @@ namespace Game {
         public ushort HP { get; set; }
         public ushort Attack { get; set; }
         public ushort Defense { get; set; }
+        public List<DamageSkill> Skills { get; }
         public List<BadStatusState> BadStatusStates { get; set; } = new List<BadStatusState>();
 
-        public Character(string name, ushort hp, ushort attack, ushort defense)
+        public Character(string name, ushort hp, ushort attack, ushort defense, List<DamageSkill> skills)
         {
             Name = name;
             HP = hp;
             Attack = attack;
             Defense = defense;
+            Skills = skills;
         }
 
         public abstract void TakeDamage(Damage damage);
+        public abstract void TakeDamageBySkill(DamageSkill damage);
 
         public abstract ushort GiveDamage(Character character);
+        public abstract ushort GiveDamageBySkill(Character character, string skillName);
 
         public abstract void ProcessPassiveEffect();
 
@@ -74,7 +86,7 @@ namespace Game {
     }
 
     public class Human : Character {
-        public Human(string name, ushort hp, ushort attack, ushort defense) : base(name, hp, attack, defense)
+        public Human(string name, ushort hp, ushort attack, ushort defense, List<DamageSkill> skills) : base(name, hp, attack, defense, skills)
         {
         }
 
@@ -90,6 +102,11 @@ namespace Game {
                 return;
             }
             HP -= ushortDmg;
+        }
+
+        public override void TakeDamageBySkill(DamageSkill damage)
+        {
+            this.TakeDamage(damage);
             foreach (var bad in damage.BadStatusStates) {
                 if (this.BadStatusStates.Find(x => x.badStatus == bad.badStatus) != null) {
                     continue;
@@ -101,8 +118,20 @@ namespace Game {
         public override ushort GiveDamage(Character character)
         {
             var beforeHp = character.HP;
-            var damage = new Damage(Attack, new List<BadStatusState>{ new BadStatusState(BadStatus.Poison, 3)});
+            var damage = new Damage(Attack);
             character.TakeDamage(damage);
+            return Convert.ToUInt16(beforeHp - character.HP);
+        }
+
+        public override ushort GiveDamageBySkill(Character character, string skillName)
+        {
+            var beforeHp = character.HP;
+            var damage = Skills.Find(x => x.Name == skillName);
+            if (damage == null) {
+                throw new Exception("skill not found");
+            }
+
+            character.TakeDamageBySkill(damage);
             return Convert.ToUInt16(beforeHp - character.HP);
         }
 
@@ -122,7 +151,7 @@ namespace Game {
     }
 
     public class Monster : Character {
-        public Monster(string name, ushort hp, ushort attack, ushort defense) : base(name, hp, attack, defense)
+        public Monster(string name, ushort hp, ushort attack, ushort defense, List<DamageSkill> skills) : base(name, hp, attack, defense, skills)
         {
         }
 
@@ -138,6 +167,11 @@ namespace Game {
                 return;
             }
             HP -= ushortDmg;
+        }
+
+        public override void TakeDamageBySkill(DamageSkill damage)
+        {
+            this.TakeDamage(damage);
             foreach (var bad in damage.BadStatusStates) {
                 if (this.BadStatusStates.Find(x => x.badStatus == bad.badStatus) != null) {
                     continue;
@@ -149,8 +183,20 @@ namespace Game {
         public override ushort GiveDamage(Character character)
         {
             var beforeHp = character.HP;
-            var damage = new Damage(Attack, new List<BadStatusState>());
+            var damage = new Damage(Attack);
             character.TakeDamage(damage);
+            return Convert.ToUInt16(beforeHp - character.HP);
+        }
+
+        public override ushort GiveDamageBySkill(Character character, string skillName)
+        {
+            var beforeHp = character.HP;
+            var damage = Skills.Find(x => x.Name == skillName);
+            if (damage == null) {
+                throw new Exception("skill not found");
+            }
+
+            character.TakeDamageBySkill(damage);
             return Convert.ToUInt16(beforeHp - character.HP);
         }
 

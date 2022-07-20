@@ -4,8 +4,8 @@ Console.WriteLine("Game");
 Console.Write("Enter Character Name >>");
 var name = Console.ReadLine() ?? "HUMAN";
 
-var userCharacter = new Human(name, 100, 10, 5);
-var monster = new Monster("Ghost", 100, 10, 5);
+var userCharacter = new Human(name, 100, 10, 5, new List<DamageSkill> { new DamageSkill("Punch", 10, new List<BadStatusState> { })});
+var monster = new Monster("Ghost", 100, 10, 5, new List<DamageSkill> { new DamageSkill("Kick", 10, new List<BadStatusState> { })});
 var turnCount = 0;
 
 while (userCharacter.isAlive() && monster.isAlive()) {
