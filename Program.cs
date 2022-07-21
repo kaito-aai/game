@@ -4,7 +4,8 @@ Console.WriteLine("Game");
 Console.Write("Enter Character Name >>");
 var name = Console.ReadLine() ?? "HUMAN";
 
-var userCharacter = new Human(name, 100, 10, 5, new List<DamageSkill> { new DamageSkill("Punch", 10, new List<BadStatusState> { })});
+var userCharacter = new Human(name, 100, 10, 5,
+    new List<DamageSkill> { new DamageSkill("Punch", 20, new List<BadStatusState> { }), new DamageSkill("A", 5, new List<BadStatusState>{})});
 var monster = new Monster("Ghost", 100, 10, 5, new List<DamageSkill> { new DamageSkill("Kick", 10, new List<BadStatusState> { })});
 var turnCount = 0;
 
@@ -13,12 +14,23 @@ while (userCharacter.isAlive() && monster.isAlive()) {
     Console.WriteLine($"=====================TURN: {turnCount}======================");
     userCharacter.ProcessPassiveEffect();
     Console.WriteLine();
-    Console.Write("Your Turn: Attack[A] / Nothing[N]");
+    Console.Write("Your Turn: Attack[A] / UseSkill[S] /Nothing[N]");
     var turn = Console.ReadKey();
     Console.WriteLine();
     if (turn.KeyChar == 'A') {
         var monsterDamage = userCharacter.GiveDamage(monster);
         Console.WriteLine($"Your Turn: {monster.Name} damaged {monsterDamage}!!");
+    }
+
+    if (turn.KeyChar == 'S') {
+        var skillName = "";
+        while (userCharacter.Skills.Find(x => x.Name == skillName) == null) {
+            Console.Write("Use Skill: Enter Skill Name>>");
+            skillName = Console.ReadLine();
+            Console.WriteLine();
+        }
+        var monsterDamage =userCharacter.GiveDamageBySkill(monster, skillName);
+        Console.WriteLine($"Your Turn: Use Skill {skillName} >> {monster.Name} damaged {monsterDamage}!!");
     }
 
     if (turn.KeyChar == 'N') {
